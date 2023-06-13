@@ -1,0 +1,25 @@
+FROM	alpine:latest
+
+#installing packages
+RUN	apk update && apk add nginx wget php7 php7-fpm php7-opcache php7-common \
+    php7-gd php7-mysqli php7-zlib php7-curl php-json supervisor php-bz2 \
+	openrc openssl openssh php-phar sudo php7-iconv mysql-client
+
+# for auto-install of wordpress with wp-cli (permet de gerer wp en ligne de commande)
+RUN wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+RUN chmod +x wp-cli.phar
+RUN mv wp-cli.phar /usr/bin/wp
+
+# needed to launch nginx
+RUN	mkdir -p var/run/nginx
+
+# #directory creation of our site
+COPY index_nginx.html /usr/share/webservice/
+
+#create nginx config file
+RUN	rm /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
+
+COPY begin.sh .
+RUN	chmod +x begin.sh
+CMD	["/bin/ash", "./begin.sh" ]

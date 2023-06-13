@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: telegraf
+spec:
+  type: ClusterIP
+  selector:
+    app: telegraf
+  ports:
+    - port: 4999
+      targetPort: 4999
+      protocol: TCP
+      name: telegraf
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegraf-deploy
+  labels:
+    app: telegraf
+spec:
+  selector:
+    matchLabels:
+      app: telegraf
+  strategy:
+    type: Recreate
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: telegraf
+    spec:
+      serviceAccountName: telegraf
+      containers:
+      - name: telegraf
+        image: image-telegraf #name of the docker image nginx:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /bin/ash
+            - -c
+            - 'pgrep telegraf'
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        ports:
+        - containerPort: 4999
+        volumeMounts:
+        - mountPath: '/var/run/docker.sock'
+          name: telegraf-endpoint
+      volumes:
+      - name: telegraf-endpoint
+        hostPath:
+          path: /var/run/docker.sock
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: telegraf
+  labels:
+    app: telegraf
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: telegraf
+subjects:
+- kind: ServiceAccount
+# Reference to upper's `metadata.name`
+  name: telegraf
+# Reference to upper's `metadata.namespace`
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

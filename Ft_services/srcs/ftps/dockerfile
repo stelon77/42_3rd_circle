@@ -1,0 +1,24 @@
+FROM	alpine:latest
+
+RUN	apk update && apk add vsftpd openrc openssl openssh
+
+#SSL config
+RUN mkdir /etc/vsftpd/ssl
+COPY ssl.key /etc/vsftpd/ssl/key.pem
+RUN chmod 600 /etc/vsftpd/ssl/key.pem
+COPY ssl.crt /etc/vsftpd/ssl/cert.pem
+RUN chmod 600 /etc/vsftpd/ssl/cert.pem
+
+ #create user for ftps
+RUN adduser -D user42
+RUN echo "user42:user42password" | chpasswd
+
+#put our new config file
+RUN rm /etc/vsftpd/vsftpd.conf
+COPY	vsftpd.conf /etc/vsftpd/vsftpd.conf
+
+#test file for download
+RUN mkdir -p home/user42/ftp/files
+RUN echo "this is a my test file" > /home/user42/ftp/files/test.txt
+
+CMD exec /usr/sbin/vsftpd /etc/vsftpd/vsftpd.conf

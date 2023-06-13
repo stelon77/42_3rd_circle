@@ -1,0 +1,16 @@
+FROM alpine:latest
+
+RUN apk update && apk add libc6-compat
+
+#install telegraf
+RUN wget https://dl.influxdata.com/telegraf/releases/telegraf-1.13.3-static_linux_amd64.tar.gz && \
+        tar -C . -xzf telegraf-1.13.3-static_linux_amd64.tar.gz && \
+        chmod +x telegraf/* && \
+        cp telegraf/telegraf /usr/bin/ && \
+        rm -rf *.tar.gz telegraf && \
+        mkdir /etc/telegraf
+
+COPY telegraf.conf /etc/telegraf/telegraf.conf
+
+CMD /usr/bin/telegraf
+

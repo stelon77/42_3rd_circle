@@ -1,0 +1,16 @@
+FROM alpine:latest
+
+#install grafana
+RUN apk update && apk add libc6-compat tar
+
+RUN wget https://dl.grafana.com/oss/release/grafana-7.3.1.linux-amd64.tar.gz && \
+tar -zxvf grafana-7.3.1.linux-amd64.tar.gz -C .
+RUN  rm grafana-7.3.1.linux-amd64.tar.gz
+RUN mv grafana* grafana
+
+#put our grafana config
+COPY grafana.db /grafana/data/
+
+# start grafana
+WORKDIR /grafana/bin
+CMD ./grafana-server

@@ -1,0 +1,7 @@
+FROM alpine:latest
+
+#install influxdb
+RUN apk update && apk add influxdb ca-certificates
+
+#run influx daemon
+CMD influxd run

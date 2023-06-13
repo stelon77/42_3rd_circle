@@ -1,0 +1,32 @@
+FROM	alpine:latest
+
+#install nginx et open ssl
+RUN apk update && apk add nginx openssl openssh
+
+# indispensable pour  lancer nginx
+RUN	mkdir -p var/run/nginx
+
+#notre repertoire pour nginx
+RUN mkdir /usr/share/webservice
+COPY index_nginx.html /usr/share/webservice/
+
+#nginx config
+RUN	rm /etc/nginx/nginx.conf
+COPY	nginx.conf /etc/nginx/nginx.conf
+
+#SSL config
+RUN mkdir /etc/nginx/ssl
+COPY ssl.key /etc/nginx/ssl/nginx.key
+RUN chmod 600 /etc/nginx/ssl/nginx.key
+COPY ssl.crt /etc/nginx/ssl/nginx.crt
+RUN chmod 600 /etc/nginx/ssl/nginx.crt
+
+# generating keys for ssh
+RUN ssh-keygen -A
+# create a new user with no password & change the password of the new user
+RUN adduser -D user42 && echo "user42:user42" | chpasswd
+
+# copying script for starting nginx
+COPY begin.sh .
+RUN	chmod +x begin.sh
+CMD	["/bin/ash", "./begin.sh" ]
